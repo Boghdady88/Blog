@@ -1,10 +1,12 @@
-using Microsoft.AspNetCore.Http;
+﻿using Blog.DataAccess;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Blog.Web.Models
 {
-    public class PostViewModel
+    public class FrontPostViewModel
     {
         public int Id { get; set; }
 
@@ -17,9 +19,8 @@ namespace Blog.Web.Models
         public string Category { get; set; } = "";
 
         public DateTime Created { get; set; } = DateTime.Now;
-        public string CurrentImage { get; set; } = "";
-        public IFormFile Img { get; set; } = null;
 
-        public List<MainCommentViewModel> MainComments { get; set; }
+        public List<MainComment> MainComments { get; set; }
+        public List<CommentViewModel> CommentViewModels { get; set; }
     }
 }

@@ -8,86 +8,81 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Blog.DataAccess;
+using Blog.Service.FileManager;
 
 namespace Blog.Web.Controllers
 {
+
     public class HomeController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
+        private IFileManager _fileManager;
 
-        public HomeController(IUnitOfWork unitOfWork)
+        public HomeController(
+            IUnitOfWork unitOfWork,
+            IFileManager fileManager
+            )
         {
             _unitOfWork = unitOfWork;
+            _fileManager = fileManager;
         }
-        public IActionResult Index()
+
+        public IActionResult Index(int pageNumber, string category, string search)
         {
-            var posts = new HashSet<Post>();
-            posts = _unitOfWork._PostRepository.GetAll().ToHashSet();
+            if (pageNumber < 1)
+                return RedirectToAction("Index", new { pageNumber = 1, category });
 
-            return View(posts);
+            var vm = _unitOfWork._PostRepository.GetAllPosts(pageNumber, category, search);
+
+            return View(vm);
         }
 
-        public IActionResult Post(int Id)
-        {
+        public IActionResult Post(int id) =>
+            View(_unitOfWork._PostRepository.GetById(id));
 
-            var post = _unitOfWork._PostRepository.GetById((int)Id);
-            var model = new PostViewModel
-            {
-                Id = post.Id,
-                Body = post.Body,
-                Title = post.Title,
-            };
+        [HttpGet("/Image/{image}")]
+        [ResponseCache(CacheProfileName = "Monthly")]
+        public IActionResult Image(string image) =>
+             new FileStreamResult(
+                 _fileManager.ImageStream(image),
+                 $"image/{image.Substring(image.LastIndexOf('.') + 1)}");
 
-            return View(model);
-        }
-
-        [HttpGet]
-        public IActionResult Edit(int? Id)
-        {
-            var postview = new PostViewModel();
-            if (Id == null)
-            {
-                return View(postview);
-            }
-            else
-            {
-                var post = _unitOfWork._PostRepository.GetById((int)Id);
-                postview.Id = post.Id;
-                postview.Body = post.Body;
-                postview.Title = post.Title;
-                return View(postview);
-
-            }
-        }
         [HttpPost]
-        public IActionResult Edit(PostViewModel post)
+        public async Task<IActionResult> Comment(CommentViewModel vm)
         {
-            var entity = new Post
-            {
-                Id = post.Id,
-                Title = post.Title,
-                Body = post.Body
-            };
+            if (!ModelState.IsValid)
+                return RedirectToAction("Post", new { id = vm.PostId });
 
-            if (post.Id > 0)
+            var post = _unitOfWork._PostRepository.GetById(vm.PostId);
+            if (vm.MainCommentId == 0)
             {
-                _unitOfWork._PostRepository.Update(entity);
+                post.MainComments = post.MainComments ?? new List<MainComment>();
+
+                post.MainComments.Add(new MainComment
+                {
+                    Message = vm.Message,
+                    Created = DateTime.Now,
+                });
+
+                _unitOfWork._PostRepository.Update(post);
             }
             else
             {
-                _unitOfWork._PostRepository.Add(entity);
+                var comment = new SubComment
+                {
+                    MainCommentId = vm.MainCommentId,
+                    Message = vm.Message,
+                    Created = DateTime.Now,
+                };
+                _unitOfWork._SubCommentRepository.Add(comment);
             }
 
             _unitOfWork.SaveChangesAsync();
-            return RedirectToAction("Index");
+
+            return RedirectToAction("Post", new { id = vm.PostId });
         }
 
-        [HttpGet]
-        public IActionResult Delete(int Id)
-        {
-            _unitOfWork._PostRepository.Delete(Id);
-            _unitOfWork.SaveChangesAsync();
-            return RedirectToAction("Index");
-        }
+
+
     }
 }

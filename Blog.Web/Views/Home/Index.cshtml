@@ -1,24 +1,35 @@
-﻿@model HashSet<Post>
-@{
-    ViewData["Title"] = "Home Page";
-}
+﻿@model IndexViewModel
 
-<div>
-    <ul>
-        @foreach (var item in Model)
-        {
-        <li>
-            <a asp-controller="Home" asp-action="Post" asp-route-id="@item.Id">
-                @item.Title
-            </a>
-            -
-            <a asp-controller="Home" asp-action="Edit" asp-route-id="@item.Id">
-                Edit
-            </a>
-            <a asp-controller="Home" asp-action="Delete" asp-route-id="@item.Id">
-                Delete
-            </a>
-        </li>
-        }
-    </ul>
+@{ ViewBag.Title = "Blog Website";
+    ViewBag.Description = "This Blog has everything!!";
+    ViewBag.Keywords = "blog programming travel photography";
+    var base_path = Context.Request.PathBase; }
+
+<div class="main-img">
+    <span class="title">Amazing Blog Site</span>
+    <form asp-controller="Home" asp-action="Index" method="get">
+        <input type="hidden" name="pageNumber" value="@Model.PageNumber" />
+        <input type="hidden" name="category" value="@Model.Category" />
+        <input class="search" type="text" name="search" placeholder="Search Blog" value="@Model.Search" />
+        <button class="submit-btn">Search</button>
+    </form>
+</div>
+
+<div class="container">
+
+    <partial name="_BlogPagination" model="Model" />
+
+
+    @foreach (var post in Model.Posts)
+    {
+        var image_path = $"{base_path}/Image/{post.Image}";
+<a class="post" asp-controller="Home" asp-action="Post" asp-route-id="@post.Id">
+    <img src="@image_path" />
+    <span class="title">
+        @post.Title
+    </span>
+</a>}
+
+    <partial name="_BlogPagination" model="Model" />
+
 </div>
