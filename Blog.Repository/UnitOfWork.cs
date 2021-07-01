@@ -23,7 +23,7 @@ namespace Blog.Repository
             _ctx.Dispose();
         }
 
-        public int Save()
+        public int SaveChangesAsync()
         {
             return _ctx.SaveChanges();
         }

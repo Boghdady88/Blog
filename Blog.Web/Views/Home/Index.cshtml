@@ -1,4 +1,24 @@
-﻿@{
+﻿@model HashSet<Post>
+@{
     ViewData["Title"] = "Home Page";
 }
 
+<div>
+    <ul>
+        @foreach (var item in Model)
+        {
+        <li>
+            <a asp-controller="Home" asp-action="Post" asp-route-id="@item.Id">
+                @item.Title
+            </a>
+            -
+            <a asp-controller="Home" asp-action="Edit" asp-route-id="@item.Id">
+                Edit
+            </a>
+            <a asp-controller="Home" asp-action="Delete" asp-route-id="@item.Id">
+                Delete
+            </a>
+        </li>
+        }
+    </ul>
+</div>

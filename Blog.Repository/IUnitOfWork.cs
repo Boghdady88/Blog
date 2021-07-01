@@ -9,6 +9,6 @@ namespace Blog.Repository
     {
         PostRepository _PostRepository { get; }
         SubCommentRepository _SubCommentRepository { get; }
-        int Save();
+         int SaveChangesAsync();
     }
 }
